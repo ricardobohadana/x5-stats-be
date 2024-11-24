@@ -37,6 +37,9 @@ class StatisticView(APIView):
         # concatenate the two dataframes
         full_df = pd.merge(games_df, perf_df, left_on='id', right_on='game_id')
         
+        if full_df.empty:
+            return Response([], status=200)
+
         # Add calculated columns
         full_df['kda'] = (full_df['kills'] + full_df['assists']) / full_df['deaths'].replace(0, 1)  # Avoid division by zero
         full_df['gold_per_minute'] = full_df['gold'] / (full_df['duration'] / 60)
@@ -73,7 +76,7 @@ class StatisticView(APIView):
         # Order aggregated_df by kda
         aggregated_df = aggregated_df.sort_values(by='avg_kda', ascending=False)
 
-        return Response(aggregated_df.  to_dict(orient='records'))
+        return Response(aggregated_df.to_dict(orient='records'))
 
 
 class PlayerStatisticView(APIView):
@@ -100,6 +103,9 @@ class PlayerStatisticView(APIView):
         
         # concatenate the two dataframes
         full_df = pd.merge(games_df, perf_df, left_on='id', right_on='game_id')
+
+        if full_df.empty:
+            return Response([], status=200)
 
         # Calculate the average KDA
         full_df['kda'] = (full_df['kills'] + full_df['assists']) / full_df['deaths']
