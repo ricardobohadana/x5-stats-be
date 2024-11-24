@@ -34,11 +34,11 @@ class StatisticView(APIView):
         performances_data = GamePerformanceSerializer(performances, many=True).data
         perf_df = pd.DataFrame(performances_data)
 
+        if games_df.empty or perf_df.empty:
+            return Response([], status=200)
+        
         # concatenate the two dataframes
         full_df = pd.merge(games_df, perf_df, left_on='id', right_on='game_id')
-        
-        if full_df.empty:
-            return Response([], status=200)
 
         # Add calculated columns
         full_df['kda'] = (full_df['kills'] + full_df['assists']) / full_df['deaths'].replace(0, 1)  # Avoid division by zero
@@ -100,12 +100,11 @@ class PlayerStatisticView(APIView):
         performances_data = GamePerformanceSerializer(performances, many=True).data
         perf_df = pd.DataFrame(performances_data)
 
+        if games_df.empty or perf_df.empty:
+            return Response([], status=200)
         
         # concatenate the two dataframes
         full_df = pd.merge(games_df, perf_df, left_on='id', right_on='game_id')
-
-        if full_df.empty:
-            return Response([], status=200)
 
         # Calculate the average KDA
         full_df['kda'] = (full_df['kills'] + full_df['assists']) / full_df['deaths']
