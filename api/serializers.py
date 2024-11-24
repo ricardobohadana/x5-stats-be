@@ -20,7 +20,7 @@ class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ['id', 'date', 'players', 'winning_team', 'duration']
+        fields = ['id', 'date', 'players', 'winning_team', 'duration', 'gold_blue', 'gold_red', 'kills_blue', 'kills_red']
         read_only_fields = ['id']  # `id` is excluded from input but included in the response
     
     def get_player_objects(self, obj: Game):

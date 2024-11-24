@@ -16,6 +16,8 @@ class Game(models.Model):
     duration = models.PositiveIntegerField()  # in seconds
     gold_blue = models.PositiveIntegerField(null=True, blank=True)
     gold_red = models.PositiveIntegerField(null=True, blank=True)
+    kills_blue = models.PositiveIntegerField(null=True, blank=True)
+    kills_red = models.PositiveIntegerField(null=True, blank=True)
     # season = models.PositiveIntegerField(null=False, blank=True, default=1)
 
     def __str__(self):
