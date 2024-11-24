@@ -46,6 +46,7 @@ class StatisticView(APIView):
         full_df['damage_per_minute'] = full_df['damage_dealt'] / (full_df['duration'] / 60)
         full_df['cs_per_minute'] = full_df['cs'] / (full_df['duration'] / 60)
         full_df['win'] = full_df['winning_team'] == full_df['team']
+        full_df['kill_participation'] = (full_df['kills'] + full_df['assists']) / full_df['team_kills']
 
         # Group by player_id and aggregate metrics
         aggregated_df = full_df.groupby('player_id').agg(
@@ -59,6 +60,7 @@ class StatisticView(APIView):
             avg_assists=('assists', 'mean'),
             avg_duration=('duration', 'mean'),
             win_rate=('win', 'mean'),
+            avg_kill_participation=('kill_participation', 'mean'),
         ).reset_index()
 
         # Calculate blue and red win rates separately
@@ -148,6 +150,10 @@ class PlayerStatisticView(APIView):
         red_wins = full_df[full_df['winning_team'] == 'red']
         red_win_rate = red_wins.shape[0] / full_df.shape[0]
 
+        # Calculate average kill participation
+        full_df['kill_participation'] = (full_df['kills'] + full_df['assists']) / full_df['team_kills']
+        avg_kill_participation = full_df['kill_participation'].mean()
+
         return Response({
             "player_id": player_id,
             "avg_kda": avg_kda,
@@ -161,5 +167,6 @@ class PlayerStatisticView(APIView):
             "avg_duration": avg_duration,
             "win_rate": win_rate,
             "blue_win_rate": blue_win_rate,
-            "red_win_rate": red_win_rate
+            "red_win_rate": red_win_rate,
+            "avg_kill_participation": avg_kill_participation
         })
