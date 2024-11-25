@@ -33,8 +33,8 @@ def get_general_from_game_and_performance(game_performances_df, game_df):
         ).reset_index()
 
         # Calculate blue and red win rates separately
-        blue_win_rate = full_df[full_df['winning_team'] == 'blue'].groupby('player_id').size() / full_df.groupby('player_id').size()
-        red_win_rate = full_df[full_df['winning_team'] == 'red'].groupby('player_id').size() / full_df.groupby('player_id').size()
+        blue_win_rate = full_df[full_df['team'] == 'blue'].groupby('player_id')['win'].mean()
+        red_win_rate = full_df[full_df['team'] == 'red'].groupby('player_id')['win'].mean()
 
         # Merge blue and red win rates into the aggregated DataFrame
         aggregated_df['blue_win_rate'] = aggregated_df['player_id'].map(blue_win_rate)
