@@ -1,9 +1,21 @@
 from django.db import transaction
 from rest_framework import serializers
-from api.models.game import Game
-from api.serializers.game_performance_serializer import GamePerformanceSerializer
-from api.models.player import Player
+from api.models.game import Game, Team
+from api.models.player import Lane, Player
 from api.models.game_performance import GamePerformance
+
+class GamePerformanceSerializer(serializers.Serializer):
+    player_id = serializers.UUIDField()
+    champion_id = serializers.IntegerField()
+    game_lane = serializers.ChoiceField(choices=Lane.choices)
+    team = serializers.ChoiceField(choices=Team.choices)
+    kills = serializers.IntegerField()
+    deaths = serializers.IntegerField()
+    assists = serializers.IntegerField()
+    damage_dealt = serializers.IntegerField(required=False)
+    gold = serializers.IntegerField(required=False)
+    cs = serializers.IntegerField(required=False)
+    vision_score = serializers.IntegerField(required=False)
 
 class GameSerializer(serializers.ModelSerializer):
     players = serializers.ListField(
@@ -14,10 +26,11 @@ class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ['id', 'date', 'players', 'winning_team', 'duration', 'gold_blue', 'gold_red', 'kills_blue', 'kills_red']
+        fields = ['id', 'date', 'players', 'winning_team', 'duration', 'gold_blue', 'gold_red', 'kills_blue', 'kills_red', 'game_performances']
         read_only_fields = ['id']  # `id` is excluded from input but included in the response
-    
+
     def create(self, validated_data):
+        print(validated_data)
         # Extract players and remove from validated_data
         player_ids = validated_data.pop('players', [])
         players = Player.objects.filter(id__in=player_ids)
@@ -46,6 +59,6 @@ class GameSerializer(serializers.ModelSerializer):
             
             for performance in performances_data:
                 player = players.get(id=performance['player_id'])
-                GamePerformance.objects.create(game=game, player=player, **validated_data)
+                GamePerformance.objects.create(game=game, player=player, **performance)
 
         return game
