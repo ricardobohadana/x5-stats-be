@@ -16,17 +16,21 @@ def get_statistics_from_game_and_performance_per_game_lane(game_performances_df,
     full_df['kill_participation'] = (full_df['kills'] + full_df['assists'])
     full_df['team_gold'] = full_df.apply(lambda row: row['gold_blue'] if row['team'] == 'blue' else row['gold_red'], axis=1)
     full_df['gold_share'] = full_df['gold'] / full_df['team_gold']
+    full_df['duration_in_mins'] = full_df['duration'] / 60
+
 
     # Group by player_id and aggregate metrics
     aggregated_df = full_df.groupby(['player_id', 'game_lane']).agg(
 
-        avg_gold_per_minute=('gold_per_minute', lambda x: aggregate_by_summing(x, full_df, 'duration')),
-        avg_vision_score=('vision_score', lambda x: aggregate_by_summing(x, full_df, 'duration')),
-        avg_damage_per_minute=('damage_per_minute', lambda x: aggregate_by_summing(x, full_df, 'duration')),
-        avg_cs_per_minute=('cs_per_minute', lambda x: aggregate_by_summing(x, full_df, 'duration')),
+        avg_gold_per_minute=('gold', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
+        avg_vision_score=('vision_score', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
+        avg_damage_per_minute=('damage_dealt', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
+        avg_cs_per_minute=('cs', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
         avg_kill_participation=('kill_participation', lambda x: aggregate_by_summing(x, full_df, 'team_kills')),
         avg_gold_share=('gold', lambda x: aggregate_by_summing(x, full_df, 'team_gold')),
-
+        avg_damage_per_gold=('damage_dealt', lambda x: aggregate_by_summing(x, full_df, 'gold')),
+        
+        avg_vision_score=('vision_score', 'mean'),
         avg_kills=('kills', 'mean'),
         avg_deaths=('deaths', 'mean'),
         avg_assists=('assists', 'mean'),
