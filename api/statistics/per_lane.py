@@ -23,7 +23,7 @@ def get_statistics_from_game_and_performance_per_game_lane(game_performances_df,
     aggregated_df = full_df.groupby(['player_id', 'game_lane']).agg(
 
         avg_gold_per_minute=('gold', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
-        avg_vision_score=('vision_score', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
+        avg_vision_score_per_minute=('vision_score', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
         avg_damage_per_minute=('damage_dealt', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
         avg_cs_per_minute=('cs', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
         avg_kill_participation=('kill_participation', lambda x: aggregate_by_summing(x, full_df, 'team_kills')),
