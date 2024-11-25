@@ -2,7 +2,7 @@ import pandas as pd
 from api.statistics.helpers import aggregate_by_summing
 
 
-def get_statistics_from_game_and_performance(game_performances_df, game_df):
+def get_statistics_from_game_and_performance_per_game_lane(game_performances_df, game_df):
     # concatenate the two dataframes
     full_df = pd.merge(game_df, game_performances_df, left_on='id', right_on='game_id')
 
@@ -18,7 +18,7 @@ def get_statistics_from_game_and_performance(game_performances_df, game_df):
     full_df['gold_share'] = full_df['gold'] / full_df['team_gold']
 
     # Group by player_id and aggregate metrics
-    aggregated_df = full_df.groupby('player_id').agg(
+    aggregated_df = full_df.groupby(['player_id', 'game_lane']).agg(
 
         avg_gold_per_minute=('gold_per_minute', lambda x: aggregate_by_summing(x, full_df, 'duration')),
         avg_vision_score=('vision_score', lambda x: aggregate_by_summing(x, full_df, 'duration')),
@@ -61,5 +61,5 @@ def get_statistics_from_game_and_performance(game_performances_df, game_df):
 
     # Replace NaN values with None for cases where there was a division by 0
     aggregated_df = aggregated_df.where(pd.notnull(aggregated_df), None)
-    return aggregated_df
 
+    return aggregated_df
