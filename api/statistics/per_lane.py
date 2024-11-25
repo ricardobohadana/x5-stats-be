@@ -17,11 +17,12 @@ def get_statistics_from_game_and_performance_per_game_lane(game_performances_df,
     full_df['team_gold'] = full_df.apply(lambda row: row['gold_blue'] if row['team'] == 'blue' else row['gold_red'], axis=1)
     full_df['gold_share'] = full_df['gold'] / full_df['team_gold']
     full_df['duration_in_mins'] = full_df['duration'] / 60
+    full_df['team_damage'] = full_df.groupby(['game_id', 'team'])['damage_dealt'].transform('sum')
 
 
     # Group by player_id and aggregate metrics
     aggregated_df = full_df.groupby(['player_id', 'game_lane']).agg(
-
+        avg_damage_share=('damage_dealt', lambda x: x.sum()/full_df.loc[x.index,'team_damage']),
         avg_gold_per_minute=('gold', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
         avg_vision_score_per_minute=('vision_score', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
         avg_damage_per_minute=('damage_dealt', lambda x: aggregate_by_summing(x, full_df, 'duration_in_mins')),
@@ -64,6 +65,6 @@ def get_statistics_from_game_and_performance_per_game_lane(game_performances_df,
     aggregated_df = aggregated_df.sort_values(by='avg_kda', ascending=False)
 
     # Replace NaN values with None for cases where there was a division by 0
-    aggregated_df = aggregated_df.where(pd.notnull(aggregated_df), None)
+    aggregated_df = aggregated_df.where(pd.notnull(aggregated_df), 0)
 
     return aggregated_df
