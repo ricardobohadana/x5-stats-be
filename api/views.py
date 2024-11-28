@@ -1,4 +1,5 @@
 import pandas as pd
+from rest_framework.request import Request
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,6 +8,7 @@ from api.models.player import Player
 from api.models.game_performance import GamePerformance
 from api.statistics.general import get_statistics_from_game_and_performance
 from api.statistics.per_lane import get_statistics_from_game_and_performance_per_game_lane
+from api.statistics.champion import get_champion_statistics, get_champion_lane_statistics
 from .serializers import PlayerSerializer, GameSerializer, GamePerformanceSerializer
 
 class PlayerViewSet(ModelViewSet):
@@ -95,6 +97,63 @@ class StatisticsPerLane(APIView):
         result = {}
         for lane in lanes:
             lane_df = aggregated_df[aggregated_df['game_lane'] == lane]
+            result[lane] = lane_df.to_dict(orient='records')
+
+        return Response(result, status=200)
+
+
+class ChampionStatistics(APIView):
+
+    def get(self, request: Request, *args, **kwargs):
+        games = Game.objects.all()
+        games_data = GameSerializer(games, many=True).data
+        games_df = pd.DataFrame(games_data)
+
+        champion_id_str = request.query_params.get('champion_id')
+        champion_id = int(champion_id_str) if champion_id_str else None
+        
+        filter_params = {}
+        if champion_id:
+            filter_params['champion_id'] = champion_id
+
+        performances = GamePerformance.objects.filter(**filter_params) if filter_params else GamePerformance.objects.all()
+        performances_data = GamePerformanceSerializer(performances, many=True).data
+        perf_df = pd.DataFrame(performances_data)
+
+        if perf_df.empty:
+            return Response([], status=200)
+        
+        champion_performance = get_champion_statistics(perf_df, games_df)
+        return Response(champion_performance.to_dict(orient='records'), status=200)
+
+class ChampionLaneStatistics(APIView):
+
+    def get(self, request: Request, *args, **kwargs):
+        games = Game.objects.all()
+        games_data = GameSerializer(games, many=True).data
+        games_df = pd.DataFrame(games_data)
+
+        champion_id_str = request.query_params.get('champion_id')
+        champion_id = int(champion_id_str) if champion_id_str else None
+        
+        filter_params = {}
+        if champion_id:
+            filter_params['champion_id'] = champion_id
+
+        performances = GamePerformance.objects.filter(**filter_params) if filter_params else GamePerformance.objects.all()
+        performances_data = GamePerformanceSerializer(performances, many=True).data
+        perf_df = pd.DataFrame(performances_data)
+
+        if perf_df.empty:
+            return Response([], status=200)
+        
+        champion_performance = get_champion_lane_statistics(perf_df, games_df)
+
+        lanes = champion_performance['game_lane'].unique()
+
+        result = {}
+        for lane in lanes:
+            lane_df = champion_performance[champion_performance['game_lane'] == lane]
             result[lane] = lane_df.to_dict(orient='records')
 
         return Response(result, status=200)

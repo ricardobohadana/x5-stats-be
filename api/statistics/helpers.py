@@ -17,6 +17,10 @@ def calculate_aggregations_values(full_df: pd.DataFrame, cols: list):
     full_df['duration_in_mins'] = full_df['duration'] / 60
     full_df['team_damage'] = full_df.groupby(['game_id', 'team'])['damage_dealt'].transform('sum')
 
+    # Calculate blue and red win rates separately
+    blue_win_rate = full_df[full_df['team'] == 'blue'].groupby(cols)['win'].mean()
+    red_win_rate = full_df[full_df['team'] == 'red'].groupby(cols)['win'].mean()
+
 
     # Group by player_id and aggregate metrics
     aggregated_df = full_df.groupby(cols).agg(
@@ -40,6 +44,7 @@ def calculate_aggregations_values(full_df: pd.DataFrame, cols: list):
         total_kills=('kills', 'sum'),
         total_deaths=('deaths', 'sum'),
         total_assists=('assists', 'sum'),
+        appearances=('game_id', 'count')
     ).reset_index()
 
     
@@ -47,13 +52,13 @@ def calculate_aggregations_values(full_df: pd.DataFrame, cols: list):
     aggregated_df['avg_kda'] = (aggregated_df['total_kills'] + aggregated_df['total_assists']) / aggregated_df['total_deaths'].replace(0, 1)
     aggregated_df = aggregated_df.drop(columns=['total_kills', 'total_deaths', 'total_assists'])
 
-    # Calculate blue and red win rates separately
-    blue_win_rate = full_df[full_df['team'] == 'blue'].groupby('player_id')['win'].mean()
-    red_win_rate = full_df[full_df['team'] == 'red'].groupby('player_id')['win'].mean()
+    col = cols
+    if type(cols) == list:
+        col = cols[0]
 
     # Merge blue and red win rates into the aggregated DataFrame
-    aggregated_df['blue_win_rate'] = aggregated_df['player_id'].map(blue_win_rate)
-    aggregated_df['red_win_rate'] = aggregated_df['player_id'].map(red_win_rate)
+    aggregated_df['blue_win_rate'] = aggregated_df[col].map(blue_win_rate)
+    aggregated_df['red_win_rate'] = aggregated_df[col].map(red_win_rate)
 
     # Replace NaN values with 0 for cases where players have no wins on a side
     aggregated_df['blue_win_rate'] = aggregated_df['blue_win_rate'].fillna(0)
